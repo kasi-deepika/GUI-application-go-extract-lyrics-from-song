@@ -1,0 +1,101 @@
+Task: Creating a GUI to Extract Lyrics from Songs Using Python
+Creating a GUI application to extract lyrics from songs involves several key steps, including setting up the GUI, integrating an API or web scraping to fetch lyrics, and displaying the lyrics within the application. Below is a detailed guide to help you accomplish this task.
+
+Step-by-Step Guide
+1. Set Up the Development Environment
+Ensure you have Python installed along with the necessary libraries. You will need:
+
+tkinter for the GUI
+requests for making API calls
+beautifulsoup4 for web scraping (if using this method)
+
+Install the required libraries using pip:
+pip install requests
+pip install beautifulsoup4
+
+2. Choose an API or Web Scraping Method
+Option 1: Using an API
+
+Many online services provide APIs for fetching song lyrics, such as:
+
+Musixmatch
+Genius
+For this example, we'll use the Genius API. First, sign up on Genius and get an API key.
+
+Option 2: Web Scraping
+
+If you prefer web scraping, you can use BeautifulSoup to scrape lyrics from websites like Lyrics.com or AZLyrics.
+
+3. Creating the GUI with Tkinter
+Create a basic GUI using Tkinter.
+import tkinter as tk
+from tkinter import messagebox
+import requests
+
+# Function to fetch lyrics using Genius API
+def fetch_lyrics(song, artist):
+    base_url = "https://api.genius.com"
+    headers = {'Authorization': 'Bearer YOUR_ACCESS_TOKEN'}
+    search_url = base_url + "/search"
+    data = {'q': song + ' ' + artist}
+    response = requests.get(search_url, data=data, headers=headers)
+    json_response = response.json()
+    remote_song_info = None
+    
+    for hit in json_response["response"]["hits"]:
+        if artist.lower() in hit["result"]["primary_artist"]["name"].lower():
+            remote_song_info = hit
+            break
+    
+    if remote_song_info:
+        song_url = remote_song_info["result"]["url"]
+        return fetch_lyrics_from_url(song_url)
+    else:
+        return "Lyrics not found."
+
+# Function to scrape lyrics from the song URL
+def fetch_lyrics_from_url(url):
+    response = requests.get(url)
+    soup = BeautifulSoup(response.text, 'html.parser')
+    lyrics = soup.find('div', class_='lyrics').get_text()
+    return lyrics
+
+# Function to handle button click event
+def on_click():
+    song = song_entry.get()
+    artist = artist_entry.get()
+    if not song or not artist:
+        messagebox.showerror("Error", "Please enter both song and artist.")
+        return
+    
+    lyrics = fetch_lyrics(song, artist)
+    lyrics_text.delete(1.0, tk.END)
+    lyrics_text.insert(tk.END, lyrics)
+
+# Set up the main application window
+root = tk.Tk()
+root.title("Lyrics Extractor")
+
+# Song input
+tk.Label(root, text="Song:").grid(row=0, column=0)
+song_entry = tk.Entry(root)
+song_entry.grid(row=0, column=1)
+
+# Artist input
+tk.Label(root, text="Artist:").grid(row=1, column=0)
+artist_entry = tk.Entry(root)
+artist_entry.grid(row=1, column=1)
+
+# Fetch button
+fetch_button = tk.Button(root, text="Fetch Lyrics", command=on_click)
+fetch_button.grid(row=2, column=0, columnspan=2)
+
+# Text box to display lyrics
+lyrics_text = tk.Text(root, wrap='word', height=20, width=50)
+lyrics_text.grid(row=3, column=0, columnspan=2, padx=10, pady=10)
+
+# Run the application
+root.mainloop()
+
+Summary
+This guide provides the steps to create a GUI application using Tkinter that can extract lyrics from songs using either an API or web scraping. The Genius API is used for demonstration, but you can choose any suitable lyrics API or web scraping method. By following these steps, you will have a functional application that fetches and displays song lyrics.
